@@ -1,0 +1,257 @@
+FULL TECHNICAL SPECIFICATION — NYC 311 Complaint Leaderboard App (“Complaint Club”)
+
+Version: 1.0
+Format: Engineering-ready specification for implementation in Cursor
+Scope: Full-stack web/mobile application that ingests NYC 311 data, processes aggregates, and exposes a public UI for leaderboards, neighborhood profiles, comparisons, and hyper-local alerts.
+
+============================================================
+1. APPLICATION OVERVIEW
+============================================================
+
+“Complaint Club” is a consumer-facing web application that displays NYC 311 complaint data in highly engaging formats:
+
+- Citywide leaderboard of neighborhoods ranked by complaints
+- Category-based leaderboards (rats, noise, parking, trash, etc.)
+- Neighborhood profile pages with stats, trends, and insights
+- Comparison tool: neighborhood vs neighborhood
+- “My Block” view: complaints near a user’s actual location
+- Social-share card generator
+
+The system requires:
+- Periodic ingestion of NYC 311 data
+- Geospatial mapping of complaints to neighborhood polygons
+- Precomputed aggregations for fast UI rendering
+- REST/GraphQL endpoints for all data access
+- Web front-end (React/Next.js recommended)
+- Optional push notifications (Phase 2)
+
+============================================================
+2. HIGH-LEVEL ARCHITECTURE
+============================================================
+
+Pipeline:
+NYC Open Data API → ETL Worker → Postgres + PostGIS → Aggregation Jobs → API Layer → Frontend
+
+Components:
+
+1. ETL Worker
+   - Polls NYC 311 complaint API
+   - Normalizes complaint records
+   - Assigns neighborhood via geospatial lookup
+
+2. Database (PostgreSQL + PostGIS)
+   - Raw and normalized complaint storage
+   - Neighborhood geometries
+   - Precomputed aggregates for speed
+
+3. Aggregation Jobs
+   - Counts by neighborhood, category, timeframe
+   - Chaos Score calculation
+   - Time-series generation
+   - Summary table refresh
+
+4. API Layer
+   - REST endpoints
+   - Caching
+   - JSON outputs for all views
+
+5. Frontend (React/Next.js)
+   - Leaderboard screen
+   - Neighborhood detail views
+   - Comparison views
+   - My Block (location-based)
+
+============================================================
+3. DATA INGESTION (ETL)
+============================================================
+
+Source:
+NYC Open Data API: https://data.cityofnewyork.us/resource/erm2-nwe9.json
+
+Fields used:
+- complaint_type
+- descriptor
+- created_date
+- latitude, longitude
+- borough
+- incident_zip
+- unique_key
+
+ETL Worker Steps:
+1. Fetch new complaints every 5 minutes
+2. Normalize complaint type → category
+3. Insert into complaints_raw
+4. Geocode lat/lon into a neighborhood polygon (PostGIS ST_Within)
+5. Insert normalized record into complaints table
+
+Category mapping:
+- Rodent complaints → rats
+- Noise complaints → noise
+- Parking violations → parking
+- Sanitation → trash
+- Heat/Hot Water → heat_water
+- Everything else → other
+
+============================================================
+4. DATABASE SCHEMA
+============================================================
+
+Table: neighborhoods
+- id SERIAL PRIMARY KEY
+- name TEXT
+- borough TEXT
+- polygon GEOMETRY(POLYGON, 4326)
+
+Table: complaints
+- id BIGINT PRIMARY KEY
+- neighborhood_id INT
+- category TEXT CHECK (category IN ('rats','noise','parking','trash','heat_water','other'))
+- created_at TIMESTAMP
+- latitude FLOAT
+- longitude FLOAT
+- raw JSONB
+
+Table: aggregates_daily
+- id SERIAL
+- neighborhood_id INT
+- date DATE
+- category TEXT
+- count INT
+
+Table: aggregates_summary
+- id SERIAL
+- neighborhood_id INT
+- timeframe TEXT  -- 'today', 'week', 'month', 'all'
+- total INT
+- rats INT
+- noise INT
+- parking INT
+- trash INT
+- heat_water INT
+- other INT
+- chaos_score INT
+
+============================================================
+5. METRICS & CALCULATIONS
+============================================================
+
+Chaos Score (0–100):
+
+chaos_score =
+  (normalized_total * 0.5) +
+  (normalized_noise * 0.2) +
+  (normalized_rats * 0.15) +
+  (normalized_parking * 0.1) +
+  (normalized_trash * 0.05)
+
+Neighborhood Rank:
+- Based on total complaints per timeframe
+
+Trend Computation:
+- Rolling 7-day and 30-day averages
+
+============================================================
+6. API SPECIFICATION
+============================================================
+
+Base URL: /api/v1
+
+GET /leaderboard
+Params:
+- category (all | rats | noise | parking | trash | heat_water | other)
+- timeframe (today | week | month | all)
+
+GET /neighborhood/:id
+Returns detailed breakdown, trends, insights
+
+GET /compare
+Params:
+- left
+- right
+- timeframe
+
+GET /nearby
+Params:
+- lat
+- lon
+- radius_meters
+
+============================================================
+7. FRONTEND SPECIFICATION
+============================================================
+
+Page: /
+Components:
+- CategoryFilter
+- TimeframeFilter
+- LeaderboardList
+- NeighborhoodCard
+- ShareButton
+
+Page: /n/[id]
+Components:
+- NeighborhoodHeader
+- CategoryBreakdown
+- TrendChart
+- Insights
+- ShareCardGenerator
+
+Page: /compare
+Components:
+- NeighborhoodSelector
+- ComparisonTable
+- ComparisonInsights
+- ShareButton
+
+Page: /my-block
+Components:
+- LocationPermissionPrompt
+- NearbyComplaintList
+- AnnoyanceScore
+- NotificationToggle
+
+============================================================
+8. SHARE CARD GENERATION
+============================================================
+
+Card size: 1080x1080 PNG  
+Fields:
+- Neighborhood name
+- Complaint total
+- Rank
+- Chaos Score
+- Timeframe
+- Category icons
+
+Rendered via:
+- server-side canvas OR client-side canvas API
+
+============================================================
+9. CRON JOBS
+============================================================
+
+Every 5 minutes:
+- ETL ingestion
+- Geocoding
+
+Every hour:
+- Summary aggregation
+
+Every day:
+- Chaos Score recalculation
+- Trend refresh
+- Share card pre-generation
+
+============================================================
+10. OPTIONAL PHASE 2 FEATURES
+============================================================
+
+- Push notifications for nearby complaints
+- Neighborhood battle mode
+- User favorites (saved neighborhoods)
+- Social login (Google/Apple)
+- Weekly digest emails
+
+============================================================
+END OF SPECIFICATION
+============================================================

@@ -1,0 +1,227 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  
+  /* Custom colors for Complaint Club */
+  --color-chaos: var(--chaos);
+  --color-chaos-low: var(--chaos-low);
+  --color-chaos-medium: var(--chaos-medium);
+  --color-chaos-high: var(--chaos-high);
+  --color-chaos-extreme: var(--chaos-extreme);
+}
+
+/* Dark theme - NYC night aesthetic */
+:root {
+  --radius: 0.75rem;
+  
+  /* Core dark theme */
+  --background: oklch(0.12 0.02 280);
+  --foreground: oklch(0.95 0.01 280);
+  --card: oklch(0.16 0.02 280);
+  --card-foreground: oklch(0.95 0.01 280);
+  --popover: oklch(0.14 0.02 280);
+  --popover-foreground: oklch(0.95 0.01 280);
+  
+  /* Primary - Electric cyan */
+  --primary: oklch(0.75 0.18 195);
+  --primary-foreground: oklch(0.12 0.02 280);
+  
+  /* Secondary - Muted purple */
+  --secondary: oklch(0.25 0.04 280);
+  --secondary-foreground: oklch(0.85 0.01 280);
+  
+  /* Muted */
+  --muted: oklch(0.22 0.03 280);
+  --muted-foreground: oklch(0.65 0.02 280);
+  
+  /* Accent - Hot pink */
+  --accent: oklch(0.70 0.22 350);
+  --accent-foreground: oklch(0.98 0 0);
+  
+  /* Destructive - Warning red */
+  --destructive: oklch(0.60 0.24 25);
+  
+  /* Borders and inputs */
+  --border: oklch(0.30 0.03 280);
+  --input: oklch(0.25 0.03 280);
+  --ring: oklch(0.75 0.18 195);
+  
+  /* Chart colors - vibrant category colors */
+  --chart-1: oklch(0.75 0.20 45);   /* Rats - amber */
+  --chart-2: oklch(0.65 0.22 300);  /* Noise - purple */
+  --chart-3: oklch(0.70 0.18 230);  /* Parking - blue */
+  --chart-4: oklch(0.70 0.20 145);  /* Trash - green */
+  --chart-5: oklch(0.65 0.24 25);   /* Heat/Water - red */
+  
+  /* Chaos score gradient colors */
+  --chaos: oklch(0.70 0.22 350);
+  --chaos-low: oklch(0.70 0.20 145);
+  --chaos-medium: oklch(0.75 0.20 85);
+  --chaos-high: oklch(0.70 0.22 45);
+  --chaos-extreme: oklch(0.60 0.24 25);
+  
+  /* Sidebar */
+  --sidebar: oklch(0.14 0.02 280);
+  --sidebar-foreground: oklch(0.95 0.01 280);
+  --sidebar-primary: oklch(0.75 0.18 195);
+  --sidebar-primary-foreground: oklch(0.12 0.02 280);
+  --sidebar-accent: oklch(0.25 0.04 280);
+  --sidebar-accent-foreground: oklch(0.85 0.01 280);
+  --sidebar-border: oklch(0.30 0.03 280);
+  --sidebar-ring: oklch(0.75 0.18 195);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom scrollbar */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--muted);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+  }
+}
+
+/* Animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px oklch(0.75 0.18 195 / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px oklch(0.75 0.18 195 / 0.5);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes count-up {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
+
+.animate-count-up {
+  animation: count-up 0.3s ease-out forwards;
+}
+
+/* Stagger animation delays */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+.stagger-7 { animation-delay: 0.35s; }
+.stagger-8 { animation-delay: 0.4s; }
+.stagger-9 { animation-delay: 0.45s; }
+.stagger-10 { animation-delay: 0.5s; }
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, oklch(0.75 0.18 195), oklch(0.70 0.22 350));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass effect */
+.glass {
+  background: oklch(0.16 0.02 280 / 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.30 0.03 280 / 0.5);
+}
+
+/* Rank badge styles */
+.rank-gold {
+  background: linear-gradient(135deg, oklch(0.80 0.15 85), oklch(0.70 0.18 60));
+  color: oklch(0.20 0.05 60);
+}
+
+.rank-silver {
+  background: linear-gradient(135deg, oklch(0.75 0.02 280), oklch(0.60 0.02 280));
+  color: oklch(0.20 0.02 280);
+}
+
+.rank-bronze {
+  background: linear-gradient(135deg, oklch(0.65 0.12 55), oklch(0.50 0.10 40));
+  color: oklch(0.20 0.05 40);
+}
