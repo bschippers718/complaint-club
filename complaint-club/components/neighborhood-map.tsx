@@ -140,13 +140,13 @@ export function NeighborhoodMap({ timeframe, colorBy, onNeighborhoodClick }: Nei
     const borough = feature?.properties?.boroname
     const stat = stats.get(ntaCode)
 
-    // Popup content
-    const popupContent = `
-      <div style="min-width: 180px; font-family: system-ui, sans-serif;">
-        <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${ntaName || 'Unknown'}</div>
-        <div style="color: #888; font-size: 12px; margin-bottom: 8px;">${borough || ''}</div>
+    // Tooltip content (shows on hover)
+    const tooltipContent = `
+      <div style="min-width: 200px; font-family: system-ui, sans-serif; padding: 8px;">
+        <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px; color: #fff;">${ntaName || 'Unknown'}</div>
+        <div style="color: #aaa; font-size: 12px; margin-bottom: 8px;">${borough || ''}</div>
         ${stat ? `
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 12px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; color: #fff;">
             <div><span style="color: #888;">Total:</span> <strong>${stat.total.toLocaleString()}</strong></div>
             <div><span style="color: #888;">Chaos:</span> <strong style="color: #0ea5e9;">${stat.chaos_score}</strong></div>
             <div>🐀 ${stat.rats}</div>
@@ -158,7 +158,13 @@ export function NeighborhoodMap({ timeframe, colorBy, onNeighborhoodClick }: Nei
       </div>
     `
 
-    layer.bindPopup(popupContent)
+    // Use tooltip for hover instead of popup
+    layer.bindTooltip(tooltipContent, {
+      permanent: false,
+      sticky: true,
+      direction: 'auto',
+      className: 'neighborhood-tooltip'
+    })
 
     layer.on({
       mouseover: (e: any) => {
@@ -219,10 +225,10 @@ export function NeighborhoodMap({ timeframe, colorBy, onNeighborhoodClick }: Nei
         />
         
         {/* Neighborhood polygons */}
-        {geoData && (
+        {geoData && stats.size > 0 && (
           <GeoJSON
             ref={geoJsonRef}
-            key={`${timeframe}-${colorBy}-${maxValue}`}
+            key={`${timeframe}-${colorBy}-${maxValue}-${stats.size}`}
             data={geoData}
             style={getFeatureStyle}
             onEachFeature={onEachFeature}
@@ -238,6 +244,32 @@ export function NeighborhoodMap({ timeframe, colorBy, onNeighborhoodClick }: Nei
           </div>
         </div>
       )}
+
+      {/* Tooltip styles */}
+      <style jsx global>{`
+        .neighborhood-tooltip {
+          background: rgba(20, 20, 35, 0.95) !important;
+          border: 1px solid rgba(100, 100, 140, 0.4) !important;
+          border-radius: 8px !important;
+          padding: 0 !important;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+        }
+        .neighborhood-tooltip .leaflet-tooltip-content {
+          margin: 0;
+        }
+        .leaflet-tooltip-left.neighborhood-tooltip::before {
+          border-left-color: rgba(20, 20, 35, 0.95) !important;
+        }
+        .leaflet-tooltip-right.neighborhood-tooltip::before {
+          border-right-color: rgba(20, 20, 35, 0.95) !important;
+        }
+        .leaflet-tooltip-top.neighborhood-tooltip::before {
+          border-top-color: rgba(20, 20, 35, 0.95) !important;
+        }
+        .leaflet-tooltip-bottom.neighborhood-tooltip::before {
+          border-bottom-color: rgba(20, 20, 35, 0.95) !important;
+        }
+      `}</style>
 
       {/* Legend */}
       <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-4 z-[1000]">
