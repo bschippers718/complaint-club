@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { MOCK_NEARBY_COMPLAINTS } from '@/lib/mock-data'
 
 export const revalidate = 30 // Cache for 30 seconds
-
-// Check if we have real Supabase config
-const hasSupabase = process.env.NEXT_PUBLIC_SUPABASE_URL && 
-                    !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -22,41 +17,15 @@ export async function GET(request: NextRequest) {
     }, { status: 400 })
   }
 
-  // Use mock data if no real Supabase
-  if (!hasSupabase) {
-    // Filter by radius for mock data
-    const filtered = MOCK_NEARBY_COMPLAINTS.filter(c => c.distance_meters <= radius).slice(0, limit)
-    
-    const categoryCounts: Record<string, number> = {}
-    for (const c of filtered) {
-      categoryCounts[c.category] = (categoryCounts[c.category] || 0) + 1
-    }
-
-    const annoyanceScore = calculateAnnoyanceScore(filtered)
-
+  // Require Supabase configuration
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
     return NextResponse.json({
-      data: {
-        complaints: filtered.map(c => ({
-          id: c.id,
-          category: c.category,
-          type: c.type,
-          description: c.description,
-          created_at: c.created_at,
-          distance_meters: c.distance_meters,
-          neighborhood: c.neighborhood
-        })),
-        summary: {
-          total: filtered.length,
-          radius_meters: radius,
-          annoyance_score: annoyanceScore,
-          category_breakdown: categoryCounts
-        },
-        location: { lat, lon }
-      }
-    })
+      data: null,
+      error: 'Supabase configuration is required. Please set NEXT_PUBLIC_SUPABASE_URL environment variable.'
+    }, { status: 500 })
   }
 
-  // Real Supabase implementation
+  // Supabase implementation
   // Validate coordinates are within NYC bounds
   if (lat < 40.4 || lat > 41.0 || lon < -74.3 || lon > -73.6) {
     return NextResponse.json({

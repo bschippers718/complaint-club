@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { MOCK_LEADERBOARD } from '@/lib/mock-data'
 import type { Category, Timeframe } from '@/lib/categories'
 
 export const revalidate = 60 // Cache for 60 seconds
-
-// Check if we have real Supabase config
-const hasSupabase = process.env.NEXT_PUBLIC_SUPABASE_URL && 
-                    !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -15,57 +10,15 @@ export async function GET(request: NextRequest) {
   const timeframe = (searchParams.get('timeframe') || 'month') as Timeframe
   const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
 
-  // Use mock data if no real Supabase
-  if (!hasSupabase) {
-    let data = [...MOCK_LEADERBOARD]
-    
-    // Filter by category if needed
-    if (category !== 'all') {
-      data = data.sort((a, b) => {
-        const aCount = a.category_counts[category] || 0
-        const bCount = b.category_counts[category] || 0
-        return bCount - aCount
-      }).map((entry, index) => ({ ...entry, rank: index + 1 }))
-    }
-
-    // Apply timeframe scaling for demo purposes
-    const timeframeFactors: Record<Timeframe, number> = {
-      today: 0.03,
-      week: 0.25,
-      month: 1,
-      all: 12
-    }
-    const factor = timeframeFactors[timeframe]
-
-    const scaledData = data.slice(0, limit).map(entry => ({
-      ...entry,
-      total: Math.round(entry.total * factor),
-      category_counts: {
-        rats: Math.round((entry.category_counts.rats || 0) * factor),
-        noise: Math.round((entry.category_counts.noise || 0) * factor),
-        parking: Math.round((entry.category_counts.parking || 0) * factor),
-        trash: Math.round((entry.category_counts.trash || 0) * factor),
-        heat_water: Math.round((entry.category_counts.heat_water || 0) * factor),
-        construction: Math.round((entry.category_counts.construction || 0) * factor),
-        building: Math.round((entry.category_counts.building || 0) * factor),
-        bikes: Math.round((entry.category_counts.bikes || 0) * factor),
-        other: Math.round((entry.category_counts.other || 0) * factor)
-      }
-    }))
-
+  // Require Supabase configuration
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
     return NextResponse.json({
-      data: scaledData,
-      meta: {
-        category,
-        timeframe,
-        count: scaledData.length,
-        updated_at: new Date().toISOString(),
-        demo_mode: true
-      }
-    })
+      data: null,
+      error: 'Supabase configuration is required. Please set NEXT_PUBLIC_SUPABASE_URL environment variable.'
+    }, { status: 500 })
   }
 
-  // Real Supabase implementation
+  // Supabase implementation
   try {
     const { createServiceClient } = await import('@/lib/supabase')
     const supabase = createServiceClient()

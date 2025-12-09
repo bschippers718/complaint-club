@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getMockCompareData } from '@/lib/mock-data'
 import type { Category, Timeframe } from '@/lib/categories'
 import { CATEGORIES } from '@/lib/categories'
 
 export const revalidate = 60
-
-// Check if we have real Supabase config
-const hasSupabase = process.env.NEXT_PUBLIC_SUPABASE_URL && 
-                    !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -23,21 +18,15 @@ export async function GET(request: NextRequest) {
     }, { status: 400 })
   }
 
-  // Use mock data if no real Supabase
-  if (!hasSupabase) {
-    const mockData = getMockCompareData(leftId, rightId)
-    
-    if (!mockData) {
-      return NextResponse.json({
-        data: null,
-        error: 'One or both neighborhoods not found'
-      }, { status: 404 })
-    }
-
-    return NextResponse.json({ data: { ...mockData, timeframe } })
+  // Require Supabase configuration
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
+    return NextResponse.json({
+      data: null,
+      error: 'Supabase configuration is required. Please set NEXT_PUBLIC_SUPABASE_URL environment variable.'
+    }, { status: 500 })
   }
 
-  // Real Supabase implementation
+  // Supabase implementation
   try {
     const { createServiceClient } = await import('@/lib/supabase')
     const supabase = createServiceClient()

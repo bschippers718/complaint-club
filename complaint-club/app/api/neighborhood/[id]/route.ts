@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getMockNeighborhoodDetail } from '@/lib/mock-data'
 
 export const revalidate = 60 // Cache for 60 seconds
-
-// Check if we have real Supabase config
-const hasSupabase = process.env.NEXT_PUBLIC_SUPABASE_URL && 
-                    !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 
 export async function GET(
   request: NextRequest,
@@ -23,21 +18,15 @@ export async function GET(
     }, { status: 400 })
   }
 
-  // Use mock data if no real Supabase
-  if (!hasSupabase) {
-    const mockData = getMockNeighborhoodDetail(neighborhoodId)
-    
-    if (!mockData) {
-      return NextResponse.json({
-        data: null,
-        error: 'Neighborhood not found'
-      }, { status: 404 })
-    }
-
-    return NextResponse.json({ data: mockData })
+  // Require Supabase configuration
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
+    return NextResponse.json({
+      data: null,
+      error: 'Supabase configuration is required. Please set NEXT_PUBLIC_SUPABASE_URL environment variable.'
+    }, { status: 500 })
   }
 
-  // Real Supabase implementation
+  // Supabase implementation
   try {
     const { createServiceClient } = await import('@/lib/supabase')
     const { getChaosDescriptor } = await import('@/lib/chaos-score')

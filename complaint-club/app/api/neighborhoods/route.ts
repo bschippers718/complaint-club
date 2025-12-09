@@ -1,56 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { MOCK_NEIGHBORHOODS } from '@/lib/mock-data'
 
 export const revalidate = 3600 // Cache for 1 hour
-
-// Check if we have real Supabase config
-const hasSupabase = process.env.NEXT_PUBLIC_SUPABASE_URL && 
-                    !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const borough = searchParams.get('borough')
   const search = searchParams.get('search')
 
-  // Use mock data if no real Supabase
-  if (!hasSupabase) {
-    let data = [...MOCK_NEIGHBORHOODS]
-    
-    if (borough) {
-      data = data.filter(n => n.borough === borough)
-    }
-    
-    if (search) {
-      const searchLower = search.toLowerCase()
-      data = data.filter(n => n.name.toLowerCase().includes(searchLower))
-    }
-
-    const byBorough: Record<string, { id: number; name: string }[]> = {}
-    for (const n of data) {
-      if (!byBorough[n.borough]) {
-        byBorough[n.borough] = []
-      }
-      byBorough[n.borough].push({ id: n.id, name: n.name })
-    }
-
+  // Require Supabase configuration
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
     return NextResponse.json({
-      data: {
-        neighborhoods: data,
-        by_borough: byBorough,
-        boroughs: Object.keys(byBorough).sort()
-      }
-    })
+      data: null,
+      error: 'Supabase configuration is required. Please set NEXT_PUBLIC_SUPABASE_URL environment variable.'
+    }, { status: 500 })
   }
 
-  // Real Supabase implementation
+  // Supabase implementation
   try {
     const { createServiceClient } = await import('@/lib/supabase')
     const supabase = createServiceClient()
 
+    // Build query - explicitly request all neighborhoods (there are ~250)
+    // Supabase's default limit is 1000, so we'll set it to ensure we get everything
     let query = supabase
       .from('neighborhoods')
-      .select('id, name, borough')
-      .order('name')
+      .select('id, name, borough', { count: 'exact' })
+      .order('name', { ascending: true })
+      .limit(1000) // Explicitly set limit to ensure we get all ~250 neighborhoods
 
     if (borough) {
       query = query.eq('borough', borough)
@@ -60,10 +36,16 @@ export async function GET(request: NextRequest) {
       query = query.ilike('name', `%${search}%`)
     }
 
-    const { data, error } = await query
+    const { data, error, count } = await query
 
     if (error) {
+      console.error('Supabase neighborhoods query error:', error)
       throw error
+    }
+
+    // Log for debugging - helps identify if we're missing neighborhoods
+    if (process.env.NODE_ENV === 'development' && data) {
+      console.log(`[Neighborhoods API] Fetched ${data.length} neighborhoods${count ? ` (total available: ${count})` : ''}`)
     }
 
     const byBorough: Record<string, { id: number; name: string }[]> = {}
