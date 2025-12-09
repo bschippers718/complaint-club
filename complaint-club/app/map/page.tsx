@@ -36,9 +36,11 @@ export default function MapPage() {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <div className="relative z-50">
+        <Navbar />
+      </div>
       
-      <div className="fixed inset-0 top-16"> {/* Full screen below navbar */}
+      <div className="fixed inset-0 top-16 z-0"> {/* Full screen below navbar */}
         {/* Map */}
         <NeighborhoodMap 
           timeframe={timeframe} 
