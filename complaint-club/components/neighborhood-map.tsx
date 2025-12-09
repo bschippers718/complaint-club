@@ -63,7 +63,42 @@ export function NeighborhoodMap({ timeframe, colorBy, onNeighborhoodClick }: Nei
     async function fetchStats() {
       try {
         const res = await fetch(`/api/map/neighborhoods?timeframe=${timeframe}`)
-        const data = await res.json()
+        
+        // Check if response is ok
+        if (!res.ok) {
+          const errorText = await res.text()
+          console.error(`Map API error (${res.status}):`, errorText)
+          setStats(new Map())
+          setMaxValue(100)
+          return
+        }
+        
+        // Check if response has content
+        const contentType = res.headers.get('content-type')
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('Map API returned non-JSON response:', contentType)
+          setStats(new Map())
+          setMaxValue(100)
+          return
+        }
+        
+        const text = await res.text()
+        if (!text || text.trim().length === 0) {
+          console.error('Map API returned empty response')
+          setStats(new Map())
+          setMaxValue(100)
+          return
+        }
+        
+        let data
+        try {
+          data = JSON.parse(text)
+        } catch (parseError) {
+          console.error('Failed to parse JSON from map API:', parseError, 'Response:', text.substring(0, 200))
+          setStats(new Map())
+          setMaxValue(100)
+          return
+        }
         
         const statsMap = new Map<string, NeighborhoodStats>()
         let max = 0
@@ -83,6 +118,8 @@ export function NeighborhoodMap({ timeframe, colorBy, onNeighborhoodClick }: Nei
         setMaxValue(max || 100)
       } catch (error) {
         console.error('Failed to fetch stats:', error)
+        setStats(new Map())
+        setMaxValue(100)
       }
     }
     

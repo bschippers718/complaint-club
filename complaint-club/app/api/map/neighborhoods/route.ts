@@ -8,9 +8,17 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const timeframe = (searchParams.get('timeframe') || 'month') as Timeframe
 
-  const supabase = createServiceClient()
+  // Require Supabase configuration
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
+    return NextResponse.json({
+      type: 'FeatureCollection',
+      features: [],
+      error: 'Supabase configuration is required. Please set NEXT_PUBLIC_SUPABASE_URL environment variable.'
+    }, { status: 500 })
+  }
 
   try {
+    const supabase = createServiceClient()
     // Get neighborhoods with their polygon geometries and stats
     const { data, error } = await supabase.rpc('get_neighborhoods_geojson', {
       p_timeframe: timeframe
@@ -20,17 +28,18 @@ export async function GET(request: NextRequest) {
       // Fallback: fetch separately if RPC doesn't exist
       console.log('RPC not available, using fallback query')
       
-      // Get neighborhoods
+      // Get neighborhoods - fetch all (~250 neighborhoods)
       const { data: neighborhoods, error: nError } = await supabase
         .from('neighborhoods')
         .select('id, name, borough, nta_code')
+        .limit(1000) // Ensure we get all neighborhoods
       
       if (nError) throw nError
 
-      // Get stats
+      // Get stats - include all categories including new ones
       const { data: stats, error: sError } = await supabase
         .from('aggregates_summary')
-        .select('neighborhood_id, total, rats, noise, parking, trash, heat_water, other, chaos_score')
+        .select('neighborhood_id, total, rats, noise, parking, trash, heat_water, construction, building, bikes, other, chaos_score')
         .eq('timeframe', timeframe)
 
       if (sError) throw sError
@@ -42,7 +51,7 @@ export async function GET(request: NextRequest) {
       const features = (neighborhoods || []).map(n => {
         const stat = statsMap.get(n.id) || { 
           total: 0, rats: 0, noise: 0, parking: 0, 
-          trash: 0, heat_water: 0, other: 0, chaos_score: 0 
+          trash: 0, heat_water: 0, construction: 0, building: 0, bikes: 0, other: 0, chaos_score: 0 
         }
         
         return {
@@ -58,6 +67,9 @@ export async function GET(request: NextRequest) {
             parking: stat.parking,
             trash: stat.trash,
             heat_water: stat.heat_water,
+            construction: stat.construction || 0,
+            building: stat.building || 0,
+            bikes: stat.bikes || 0,
             other: stat.other,
             chaos_score: stat.chaos_score
           },

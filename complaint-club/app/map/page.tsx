@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Navbar } from '@/components/navbar'
 import { NeighborhoodMap } from '@/components/neighborhood-map'
 import { Button } from '@/components/ui/button'
 import { 
@@ -34,13 +35,16 @@ export default function MapPage() {
   ]
 
   return (
-    <div className="fixed inset-0 top-16"> {/* Full screen below navbar */}
-      {/* Map */}
-      <NeighborhoodMap 
-        timeframe={timeframe} 
-        colorBy={colorBy}
-        onNeighborhoodClick={handleNeighborhoodClick}
-      />
+    <div className="min-h-screen">
+      <Navbar />
+      
+      <div className="fixed inset-0 top-16"> {/* Full screen below navbar */}
+        {/* Map */}
+        <NeighborhoodMap 
+          timeframe={timeframe} 
+          colorBy={colorBy}
+          onNeighborhoodClick={handleNeighborhoodClick}
+        />
 
       {/* Controls overlay */}
       <div className="absolute top-4 left-4 right-4 flex flex-wrap items-start justify-between gap-4 pointer-events-none">
@@ -116,6 +120,7 @@ export default function MapPage() {
             Click to view full details.
           </p>
         </div>
+      </div>
       </div>
     </div>
   )
