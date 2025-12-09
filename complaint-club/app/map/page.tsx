@@ -36,13 +36,13 @@ export default function MapPage() {
 
   return (
     <div className="min-h-screen relative">
-      {/* Navbar - fixed at top with high z-index */}
-      <div className="fixed top-0 left-0 right-0 z-[100]">
+      {/* Navbar - fixed at top with solid background and high z-index */}
+      <div className="fixed top-0 left-0 right-0 z-[100] bg-background">
         <Navbar />
       </div>
       
       {/* Map - positioned below navbar */}
-      <div className="fixed inset-0 top-16 z-0"> {/* Full screen below navbar */}
+      <div className="fixed top-16 left-0 right-0 bottom-0 z-0">
         {/* Map */}
         <NeighborhoodMap 
           timeframe={timeframe} 
