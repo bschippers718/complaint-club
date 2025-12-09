@@ -187,12 +187,12 @@ export function NeighborhoodMap({ timeframe, colorBy, onNeighborhoodClick }: Nei
         <div style="color: #aaa; font-size: 12px; margin-bottom: 8px;">${borough || ''}</div>
         ${stat ? `
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; color: #fff;">
-            <div><span style="color: #888;">Total:</span> <strong>${stat.total.toLocaleString()}</strong></div>
-            <div><span style="color: #888;">Chaos:</span> <strong style="color: #0ea5e9;">${stat.chaos_score}</strong></div>
-            <div>🐀 ${stat.rats}</div>
-            <div>🔊 ${stat.noise}</div>
-            <div>🚗 ${stat.parking}</div>
-            <div>🗑️ ${stat.trash}</div>
+            <div><span style="color: #888;">Total:</span> <strong>${Number(stat.total ?? 0).toLocaleString()}</strong></div>
+            <div><span style="color: #888;">Chaos:</span> <strong style="color: #0ea5e9;">${Number(stat.chaos_score ?? 0)}</strong></div>
+            <div>🐀 ${Number(stat.rats ?? 0)}</div>
+            <div>🔊 ${Number(stat.noise ?? 0)}</div>
+            <div>🚗 ${Number(stat.parking ?? 0)}</div>
+            <div>🗑️ ${Number(stat.trash ?? 0)}</div>
           </div>
         ` : '<div style="color: #888; font-size: 12px;">No complaint data</div>'}
       </div>
@@ -326,7 +326,7 @@ export function NeighborhoodMap({ timeframe, colorBy, onNeighborhoodClick }: Nei
           <span className="text-xs text-muted-foreground">High</span>
         </div>
         <div className="text-xs text-muted-foreground mt-1">
-          Max: {maxValue.toLocaleString()}
+          Max: {Number(maxValue ?? 0).toLocaleString()}
         </div>
       </div>
     </div>

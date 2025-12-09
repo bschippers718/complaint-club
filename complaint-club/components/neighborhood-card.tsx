@@ -31,11 +31,13 @@ export function NeighborhoodCard({
 }: NeighborhoodCardProps) {
   const [copied, setCopied] = useState(false)
   const chaosInfo = getChaosDescriptor(chaosScore)
+  const safeTotal = Number.isFinite(total) ? total : 0
   
   // Find top category
   const topCategory = (Object.entries(categoryCounts) as [Category, number][])
     .filter(([cat]) => cat !== 'other')
     .sort((a, b) => b[1] - a[1])[0]
+  const topCount = topCategory?.[1] ?? 0
 
   const getRankBadgeClass = (rank: number) => {
     if (rank === 1) return 'rank-gold'
@@ -52,10 +54,10 @@ export function NeighborhoodCard({
     const url = `https://311complaints.nyc/n/${neighborhoodId}`
     
     let text: string
-    if (topCat && topCategory[1] > 0) {
-      text = `🗽 ${name} is #${rank} in NYC with ${total.toLocaleString()} complaints!\n\n${topCat.icon} Top issue: ${topCat.label.toLowerCase()} (${topCategory[1].toLocaleString()})\n\nChaos Score: ${chaosScore}/100 ${chaosInfo.emoji}\n\n${url.trim()}`
+    if (topCat && topCount > 0) {
+      text = `🗽 ${name} is #${rank} in NYC with ${safeTotal.toLocaleString()} complaints!\n\n${topCat.icon} Top issue: ${topCat.label.toLowerCase()} (${topCount.toLocaleString()})\n\nChaos Score: ${chaosScore}/100 ${chaosInfo.emoji}\n\n${url.trim()}`
     } else {
-      text = `🗽 ${name} is #${rank} in NYC with ${total.toLocaleString()} complaints!\n\nChaos Score: ${chaosScore}/100 ${chaosInfo.emoji}\n\n${url.trim()}`
+      text = `🗽 ${name} is #${rank} in NYC with ${safeTotal.toLocaleString()} complaints!\n\nChaos Score: ${chaosScore}/100 ${chaosInfo.emoji}\n\n${url.trim()}`
     }
     
     const success = await copyToClipboard(text)
@@ -104,15 +106,15 @@ export function NeighborhoodCard({
               <div>
                 <span className="text-muted-foreground">Complaints: </span>
                 <span className="font-mono font-semibold text-foreground">
-                  {total.toLocaleString()}
+                  {safeTotal.toLocaleString()}
                 </span>
               </div>
               
-              {topCategory && topCategory[1] > 0 && (
+              {topCategory && topCount > 0 && (
                 <div className="flex items-center gap-1">
                   <span className="text-muted-foreground">Top: </span>
                   <span>{CATEGORY_CONFIG[topCategory[0]].icon}</span>
-                  <span className="font-mono">{topCategory[1]}</span>
+                  <span className="font-mono">{topCount}</span>
                 </div>
               )}
             </div>

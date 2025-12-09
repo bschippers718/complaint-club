@@ -35,3 +35,4 @@ Once configured, I'll be able to:
 ---
 
 **Ready?** Once you have your Supabase Personal Access Token, let me know and I'll create the configuration file for you!
+
