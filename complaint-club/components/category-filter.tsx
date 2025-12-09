@@ -1,6 +1,6 @@
 'use client'
 
-import { CATEGORY_CONFIG, type Category } from '@/lib/categories'
+import { CATEGORY_CONFIG, CATEGORIES, type Category } from '@/lib/categories'
 import { cn } from '@/lib/utils'
 
 interface CategoryFilterProps {
@@ -9,7 +9,8 @@ interface CategoryFilterProps {
 }
 
 export function CategoryFilter({ selected, onSelect }: CategoryFilterProps) {
-  const categories: (Category | 'all')[] = ['all', 'rats', 'noise', 'parking', 'trash', 'heat_water', 'other']
+  // Show 'all' plus all defined categories
+  const categories: (Category | 'all')[] = ['all', ...CATEGORIES]
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -42,4 +43,3 @@ export function CategoryFilter({ selected, onSelect }: CategoryFilterProps) {
     </div>
   )
 }
-

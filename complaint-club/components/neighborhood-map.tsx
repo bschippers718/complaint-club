@@ -18,6 +18,9 @@ interface NeighborhoodStats {
   parking: number
   trash: number
   heat_water: number
+  construction: number
+  building: number
+  bikes: number
   other: number
   chaos_score: number
 }

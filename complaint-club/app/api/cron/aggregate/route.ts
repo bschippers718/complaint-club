@@ -18,20 +18,28 @@ export async function GET(request: NextRequest) {
   try {
     console.log('Starting aggregation refresh...')
 
-    // 1. Refresh daily aggregates for today and yesterday
+    // 1. Refresh daily aggregates for today, yesterday, and last 7 days
+    // This ensures week data is accurate and trend data is reasonably up-to-date
     console.log('Refreshing daily aggregates...')
-    const { error: dailyError } = await supabase.rpc('refresh_daily_aggregates')
-    if (dailyError) {
-      console.error('Daily aggregate error:', dailyError)
+    const dailyErrors: string[] = []
+    
+    // Refresh daily aggregates for the last 7 days (for week accuracy and trend data)
+    for (let i = 0; i < 7; i++) {
+      const targetDate = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+      const dateStr = targetDate.toISOString().split('T')[0]
+      
+      const { error } = await supabase.rpc('refresh_daily_aggregates', {
+        target_date: dateStr
+      })
+      
+      if (error && i < 2) { // Log errors for today and yesterday
+        console.error(`Daily aggregate error for ${dateStr}:`, error)
+        dailyErrors.push(`${dateStr}: ${error.message}`)
+      }
     }
-
-    // Also refresh yesterday's
-    const { error: yesterdayError } = await supabase.rpc('refresh_daily_aggregates', {
-      target_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    })
-    if (yesterdayError) {
-      console.error('Yesterday aggregate error:', yesterdayError)
-    }
+    
+    const dailyError = dailyErrors.length > 0 ? new Error(dailyErrors.join('; ')) : null
+    const yesterdayError = null // No longer separate
 
     // 2. Refresh summary aggregates (today, week, month, all)
     console.log('Refreshing summary aggregates...')
@@ -79,7 +87,6 @@ export async function GET(request: NextRequest) {
       },
       errors: {
         daily: dailyError?.message,
-        yesterday: yesterdayError?.message,
         summary: summaryError?.message,
         chaos: chaosError?.message
       }

@@ -12,9 +12,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const neighborhoodId = parseInt(id)
+  // Clean the ID - remove any whitespace, newlines, or invalid characters
+  const cleanId = id.trim().replace(/[\s\n\r\t]/g, '')
+  const neighborhoodId = parseInt(cleanId)
 
-  if (isNaN(neighborhoodId)) {
+  if (isNaN(neighborhoodId) || neighborhoodId <= 0) {
     return NextResponse.json({
       data: null,
       error: 'Invalid neighborhood ID'

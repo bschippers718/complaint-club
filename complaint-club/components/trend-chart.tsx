@@ -20,6 +20,9 @@ interface TrendData {
   parking: number
   trash: number
   heat_water: number
+  construction: number
+  building: number
+  bikes: number
   other: number
 }
 
@@ -29,12 +32,15 @@ interface TrendChartProps {
 }
 
 const CATEGORY_COLORS: Record<Category, string> = {
-  rats: '#d97706',     // amber
-  noise: '#9333ea',    // purple
-  parking: '#2563eb',  // blue
-  trash: '#16a34a',    // green
+  rats: '#d97706',       // amber
+  noise: '#9333ea',      // purple
+  parking: '#2563eb',    // blue
+  trash: '#16a34a',      // green
   heat_water: '#dc2626', // red
-  other: '#6b7280'     // gray
+  construction: '#ea580c', // orange
+  building: '#78716c',   // stone
+  bikes: '#06b6d4',      // cyan
+  other: '#6b7280'       // gray
 }
 
 export function TrendChart({ data, showCategories = false }: TrendChartProps) {
@@ -107,4 +113,3 @@ export function TrendChart({ data, showCategories = false }: TrendChartProps) {
     </div>
   )
 }
-

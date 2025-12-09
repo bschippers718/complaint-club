@@ -21,8 +21,11 @@ export async function GET(request: NextRequest) {
     
     // Filter by category if needed
     if (category !== 'all') {
-      data = data.sort((a, b) => b.category_counts[category] - a.category_counts[category])
-        .map((entry, index) => ({ ...entry, rank: index + 1 }))
+      data = data.sort((a, b) => {
+        const aCount = a.category_counts[category] || 0
+        const bCount = b.category_counts[category] || 0
+        return bCount - aCount
+      }).map((entry, index) => ({ ...entry, rank: index + 1 }))
     }
 
     // Apply timeframe scaling for demo purposes
@@ -38,12 +41,15 @@ export async function GET(request: NextRequest) {
       ...entry,
       total: Math.round(entry.total * factor),
       category_counts: {
-        rats: Math.round(entry.category_counts.rats * factor),
-        noise: Math.round(entry.category_counts.noise * factor),
-        parking: Math.round(entry.category_counts.parking * factor),
-        trash: Math.round(entry.category_counts.trash * factor),
-        heat_water: Math.round(entry.category_counts.heat_water * factor),
-        other: Math.round(entry.category_counts.other * factor)
+        rats: Math.round((entry.category_counts.rats || 0) * factor),
+        noise: Math.round((entry.category_counts.noise || 0) * factor),
+        parking: Math.round((entry.category_counts.parking || 0) * factor),
+        trash: Math.round((entry.category_counts.trash || 0) * factor),
+        heat_water: Math.round((entry.category_counts.heat_water || 0) * factor),
+        construction: Math.round((entry.category_counts.construction || 0) * factor),
+        building: Math.round((entry.category_counts.building || 0) * factor),
+        bikes: Math.round((entry.category_counts.bikes || 0) * factor),
+        other: Math.round((entry.category_counts.other || 0) * factor)
       }
     }))
 
@@ -85,6 +91,9 @@ export async function GET(request: NextRequest) {
       parking: number
       trash: number
       heat_water: number
+      construction?: number
+      building?: number
+      bikes?: number
       other: number
       chaos_score: number
     }) => ({
@@ -100,6 +109,9 @@ export async function GET(request: NextRequest) {
         parking: row.parking,
         trash: row.trash,
         heat_water: row.heat_water,
+        construction: row.construction || 0,
+        building: row.building || 0,
+        bikes: row.bikes || 0,
         other: row.other
       }
     }))

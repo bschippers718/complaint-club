@@ -7,9 +7,12 @@ import { ChaosGauge } from '@/components/chaos-gauge'
 import { CategoryBreakdown } from '@/components/category-breakdown'
 import { TrendChart } from '@/components/trend-chart'
 import { TimeframeToggle } from '@/components/timeframe-toggle'
+import { ShareModal } from '@/components/share-modal'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { Category, Timeframe } from '@/lib/categories'
+import { CATEGORY_CONFIG, type Category, type Timeframe } from '@/lib/categories'
+import type { ShareData } from '@/lib/share-utils'
+import { Share2 } from 'lucide-react'
 
 interface NeighborhoodData {
   id: number
@@ -27,6 +30,9 @@ interface NeighborhoodData {
     parking: number
     trash: number
     heat_water: number
+    construction: number
+    building: number
+    bikes: number
     other: number
     rank: number
   }>
@@ -38,24 +44,32 @@ interface NeighborhoodData {
     parking: number
     trash: number
     heat_water: number
+    construction: number
+    building: number
+    bikes: number
     other: number
   }>
   insights: string[]
 }
 
 export default function NeighborhoodPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+  const rawId = use(params).id
+  // Clean the ID to handle any whitespace or special characters from pasted URLs
+  const id = rawId.trim().replace(/[\s\n\r\t]/g, '')
   const [data, setData] = useState<NeighborhoodData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [timeframe, setTimeframe] = useState<Timeframe>('month')
   const [showCategoryTrends, setShowCategoryTrends] = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
 
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true)
       try {
-        const res = await fetch(`/api/neighborhood/${id}`)
+        // Clean the ID - remove any whitespace or invalid characters
+        const cleanId = String(id).trim()
+        const res = await fetch(`/api/neighborhood/${cleanId}`)
         const json = await res.json()
         
         if (json.error) {
@@ -66,6 +80,7 @@ export default function NeighborhoodPage({ params }: { params: Promise<{ id: str
           setError(null)
         }
       } catch (err) {
+        console.error('Failed to load neighborhood data:', err)
         setError('Failed to load neighborhood data')
         setData(null)
       } finally {
@@ -73,7 +88,12 @@ export default function NeighborhoodPage({ params }: { params: Promise<{ id: str
       }
     }
 
-    fetchData()
+    if (id) {
+      fetchData()
+    } else {
+      setError('Invalid neighborhood ID')
+      setIsLoading(false)
+    }
   }, [id])
 
   if (isLoading) {
@@ -111,12 +131,42 @@ export default function NeighborhoodPage({ params }: { params: Promise<{ id: str
   }
 
   const currentStats = data.stats[timeframe] || data.stats['month'] || {
-    total: 0, rats: 0, noise: 0, parking: 0, trash: 0, heat_water: 0, other: 0, rank: 0
+    total: 0, rats: 0, noise: 0, parking: 0, trash: 0, heat_water: 0, 
+    construction: 0, building: 0, bikes: 0, other: 0, rank: 0
+  }
+
+  // Prepare share data
+  const shareData: ShareData = {
+    neighborhoodName: data.name,
+    neighborhoodId: data.id,
+    borough: data.borough,
+    rank: currentStats.rank,
+    total: currentStats.total,
+    chaosScore: data.chaos_score,
+    categoryCounts: {
+      rats: currentStats.rats,
+      noise: currentStats.noise,
+      parking: currentStats.parking,
+      trash: currentStats.trash,
+      heat_water: currentStats.heat_water,
+      construction: currentStats.construction || 0,
+      building: currentStats.building || 0,
+      bikes: currentStats.bikes || 0,
+      other: currentStats.other
+    },
+    timeframe: timeframe
   }
 
   return (
     <div className="min-h-screen">
       <Navbar />
+
+      {/* Share Modal */}
+      <ShareModal 
+        open={shareModalOpen} 
+        onOpenChange={setShareModalOpen}
+        data={shareData}
+      />
 
       {/* Hero */}
       <section className="border-b border-border">
@@ -153,9 +203,17 @@ export default function NeighborhoodPage({ params }: { params: Promise<{ id: str
                     ⚔️ Compare to Another
                   </Button>
                 </Link>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShareModalOpen(true)}
+                  className="gap-2"
+                >
+                  <Share2 className="h-4 w-4" />
+                  Share
+                </Button>
                 <Link href={`/api/share/${data.id}`} target="_blank">
-                  <Button variant="outline">
-                    📤 Share Card
+                  <Button variant="ghost" size="sm">
+                    📸 View Image Card
                   </Button>
                 </Link>
               </div>
@@ -191,7 +249,7 @@ export default function NeighborhoodPage({ params }: { params: Promise<{ id: str
               label="Top Issue" 
               value={data.top_category.replace('_', '/')} 
               subValue={`${data.top_category_count} complaints`}
-              emoji={getCategoryEmoji(data.top_category)}
+              emoji={CATEGORY_CONFIG[data.top_category]?.icon || '📋'}
             />
             <StatCard 
               label="Chaos Score" 
@@ -237,6 +295,9 @@ export default function NeighborhoodPage({ params }: { params: Promise<{ id: str
                     parking: currentStats.parking,
                     trash: currentStats.trash,
                     heat_water: currentStats.heat_water,
+                    construction: currentStats.construction || 0,
+                    building: currentStats.building || 0,
+                    bikes: currentStats.bikes || 0,
                     other: currentStats.other
                   }}
                   total={currentStats.total}
@@ -306,16 +367,3 @@ function StatCard({
     </Card>
   )
 }
-
-function getCategoryEmoji(category: string): string {
-  const emojis: Record<string, string> = {
-    rats: '🐀',
-    noise: '🔊',
-    parking: '🚗',
-    trash: '🗑️',
-    heat_water: '🔥',
-    other: '📋'
-  }
-  return emojis[category] || '📋'
-}
-

@@ -26,6 +26,9 @@ export interface LeaderboardEntry {
     parking: number
     trash: number
     heat_water: number
+    construction: number
+    building: number
+    bikes: number
     other: number
   }
 }
@@ -55,6 +58,9 @@ export interface CategoryStats {
   parking: number
   trash: number
   heat_water: number
+  construction: number
+  building: number
+  bikes: number
   other: number
 }
 
@@ -66,6 +72,9 @@ export interface TrendData {
   parking: number
   trash: number
   heat_water: number
+  construction: number
+  building: number
+  bikes: number
   other: number
 }
 
@@ -90,6 +99,9 @@ export interface NeighborhoodCompare {
     parking: number
     trash: number
     heat_water: number
+    construction: number
+    building: number
+    bikes: number
     other: number
   }
 }
@@ -122,4 +134,3 @@ export interface ShareCardData {
   top_category: Category
   top_category_count: number
 }
-
