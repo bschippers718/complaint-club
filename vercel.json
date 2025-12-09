@@ -1,8 +1,7 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm install",
+  "buildCommand": "cd complaint-club && npm run build",
+  "outputDirectory": "complaint-club/.next",
+  "installCommand": "cd complaint-club && npm install",
   "framework": "nextjs",
-  "regions": ["iad1"],
-  "rootDirectory": "complaint-club"
+  "regions": ["iad1"]
 }
