@@ -44,3 +44,4 @@ We removed all mock data fallbacks to ensure both local and production use the s
 The service role key is secret and not stored in the repo. Get it from:
 - https://supabase.com/dashboard/project/lphkkpczptbqokbtfjuz/settings/api
 - Look for the **service_role** key (it's a long JWT token starting with `eyJ...`)
+

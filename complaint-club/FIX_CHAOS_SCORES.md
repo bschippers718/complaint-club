@@ -103,3 +103,4 @@ The chaos score calculation now:
   3. `003_helper_rpcs.sql`
   4. `004_geojson_rpc.sql`
   5. `008_add_new_categories.sql` (or `APPLY_ALL_FIXES.sql`)
+

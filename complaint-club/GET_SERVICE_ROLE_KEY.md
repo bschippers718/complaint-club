@@ -48,3 +48,4 @@ https://supabase.com/dashboard/project/lphkkpczptbqokbtfjuz/settings/api
 
 ❌ **Needs to be added:**
 - `SUPABASE_SERVICE_ROLE_KEY` - Get from **API Keys** page (not JWT Keys)
+

@@ -53,3 +53,4 @@ done
 echo "✅ After running all migrations, you can:"
 echo "   - Seed neighborhoods: curl -X POST https://your-app.vercel.app/api/seed -H 'Authorization: Bearer YOUR_CRON_SECRET'"
 echo "   - Run data backfill: curl -X POST https://your-app.vercel.app/api/cron/ingest -H 'Authorization: Bearer YOUR_CRON_SECRET'"
+

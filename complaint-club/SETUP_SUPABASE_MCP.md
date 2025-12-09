@@ -94,3 +94,4 @@ Once the MCP server is configured:
 4. Run any other migrations you need
 
 Let me know when you've configured it, and I'll test the connection!
+

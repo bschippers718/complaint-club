@@ -61,3 +61,4 @@ Since production is already connected, the chaos scores should automatically be 
 3. **Verify environment variables** are set correctly
 
 Everything looks good! 🎉
+

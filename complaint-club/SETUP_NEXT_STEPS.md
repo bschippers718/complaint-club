@@ -126,3 +126,4 @@ curl -X POST https://complaint-club.vercel.app/api/cron/aggregate \
 - **Database errors**: Verify migrations ran successfully in Supabase SQL Editor
 - **API errors**: Check Vercel function logs in the dashboard
 - **No data showing**: Make sure you've seeded neighborhoods and run the initial backfill
+

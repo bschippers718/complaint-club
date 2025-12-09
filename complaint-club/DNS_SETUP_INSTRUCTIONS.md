@@ -160,3 +160,4 @@ You should see `216.198.79.1` in the response.
 - **Vercel Support**: https://vercel.com/support
 - **DNS Propagation Checker**: https://www.whatsmydns.net/
 - **Vercel Domain Docs**: https://vercel.com/docs/concepts/projects/domains
+

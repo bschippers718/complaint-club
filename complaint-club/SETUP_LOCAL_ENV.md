@@ -52,3 +52,4 @@ Should return `250` (the number of neighborhoods in the database).
 ## Note
 
 The `.env.local` file is gitignored, so your local credentials won't be committed. Make sure you have the correct values from your Supabase dashboard.
+
