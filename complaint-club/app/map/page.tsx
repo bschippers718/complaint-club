@@ -36,9 +36,7 @@ export default function MapPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="relative z-50">
-        <Navbar />
-      </div>
+      <Navbar />
       
       <div className="fixed inset-0 top-16 z-0"> {/* Full screen below navbar */}
         {/* Map */}
