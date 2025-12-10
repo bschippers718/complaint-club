@@ -106,7 +106,7 @@ function calculateAnnoyanceScore(complaints: { category: string; distance_meters
     other: 0.7
   }
 
-  let score = 0
+  let weightedScore = 0
   const now = Date.now()
 
   for (const complaint of complaints) {
@@ -116,8 +116,12 @@ function calculateAnnoyanceScore(complaints: { category: string; distance_meters
     const recencyFactor = Math.max(0.1, 1 - (daysSince / 30))
     const categoryWeight = categoryWeights[complaint.category] || 1
     
-    score += distanceFactor * recencyFactor * categoryWeight * 10
+    weightedScore += distanceFactor * recencyFactor * categoryWeight
   }
 
-  return Math.min(100, Math.round(score))
+  // Use logarithmic scaling so score doesn't max out too quickly
+  // ~5 weighted complaints = ~20, ~15 = ~40, ~30 = ~60, ~60 = ~80, ~100+ = ~90+
+  const logScore = Math.log10(weightedScore + 1) * 35
+  
+  return Math.min(100, Math.round(logScore))
 }
