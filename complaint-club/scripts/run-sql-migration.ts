@@ -26,8 +26,8 @@ async function executeSQL(sql: string): Promise<void> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'apikey': serviceRoleKey,
-      'Authorization': `Bearer ${serviceRoleKey}`
+      'apikey': serviceRoleKey!,
+      'Authorization': `Bearer ${serviceRoleKey!}`
     },
     body: JSON.stringify({ sql_query: sql })
   })
