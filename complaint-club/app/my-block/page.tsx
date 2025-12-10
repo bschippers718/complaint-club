@@ -164,7 +164,7 @@ export default function MyBlockPage() {
                   <div>
                     <h2 className="text-2xl font-bold mb-2">Your Annoyance Score</h2>
                     <p className="text-muted-foreground">
-                      Based on {data.summary.total} complaints within {data.summary.radius_meters}m
+                      Based on {data.summary.total} complaints within {Math.round(data.summary.radius_meters / 100)} {data.summary.radius_meters <= 100 ? 'block' : 'blocks'}
                     </p>
                   </div>
                   <div className="text-center">
@@ -205,7 +205,7 @@ export default function MyBlockPage() {
                   size="sm"
                   onClick={() => setRadius(r)}
                 >
-                  {r}m
+                  {Math.round(r / 100)} {r === 100 ? 'block' : 'blocks'}
                 </Button>
               ))}
             </div>
@@ -220,7 +220,7 @@ export default function MyBlockPage() {
                   <div className="text-center py-8">
                     <div className="text-4xl mb-4">🎉</div>
                     <p className="text-muted-foreground">
-                      No complaints found within {radius}m. Lucky you!
+                      No complaints found within {Math.round(radius / 100)} {radius <= 100 ? 'block' : 'blocks'}. Lucky you!
                     </p>
                   </div>
                 ) : (
@@ -257,7 +257,7 @@ function ComplaintItem({ complaint }: { complaint: NearbyComplaint }) {
         <div className="flex items-center gap-2 mb-1">
           <span className={cn('font-medium', config.color)}>{config.label}</span>
           <span className="text-muted-foreground">•</span>
-          <span className="text-sm text-muted-foreground">{complaint.distance_meters}m away</span>
+          <span className="text-sm text-muted-foreground">{complaint.distance_meters < 100 ? '<1 block' : `${Math.round(complaint.distance_meters / 100)} ${complaint.distance_meters < 150 ? 'block' : 'blocks'}`} away</span>
         </div>
         <p className="text-sm text-foreground truncate">
           {complaint.type}
