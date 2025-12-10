@@ -247,22 +247,41 @@ export default function MyBlockPage() {
 }
 
 function ComplaintItem({ complaint }: { complaint: NearbyComplaint }) {
+  const [expanded, setExpanded] = useState(false)
   const config = CATEGORY_CONFIG[complaint.category]
   const timeAgo = getTimeAgo(new Date(complaint.created_at))
+  const hasDetails = complaint.type || complaint.description
 
   return (
-    <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+    <div 
+      className={cn(
+        "flex items-start gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors",
+        hasDetails && "cursor-pointer"
+      )}
+      onClick={() => hasDetails && setExpanded(!expanded)}
+    >
       <div className="text-2xl">{config.icon}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span className={cn('font-medium', config.color)}>{config.label}</span>
           <span className="text-muted-foreground">•</span>
           <span className="text-sm text-muted-foreground">{complaint.distance_meters < 100 ? '<1 block' : `${Math.round(complaint.distance_meters / 100)} ${complaint.distance_meters < 150 ? 'block' : 'blocks'}`} away</span>
+          {hasDetails && (
+            <span className="text-xs text-muted-foreground ml-auto">
+              {expanded ? '▼' : '▶'}
+            </span>
+          )}
         </div>
-        <p className="text-sm text-foreground truncate">
+        <p className={cn("text-sm text-foreground", !expanded && "truncate")}>
           {complaint.type}
           {complaint.description && ` - ${complaint.description}`}
         </p>
+        {expanded && complaint.description && (
+          <div className="mt-2 p-2 bg-background/50 rounded text-sm">
+            <span className="text-muted-foreground">Details: </span>
+            {complaint.description}
+          </div>
+        )}
         <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
           <span>{timeAgo}</span>
           {complaint.neighborhood && (
