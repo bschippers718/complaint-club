@@ -21,7 +21,7 @@ if (!supabaseUrl || !serviceRoleKey) {
 async function executeSQL(sql: string): Promise<void> {
   // Use Supabase REST API to execute SQL
   // Note: This requires the service role key and uses the PostgREST API
-  const projectUrl = supabaseUrl.replace('/rest/v1', '')
+  const projectUrl = supabaseUrl!.replace('/rest/v1', '')
   const response = await fetch(`${projectUrl}/rest/v1/rpc/exec_sql`, {
     method: 'POST',
     headers: {
@@ -42,7 +42,7 @@ async function executeSQL(sql: string): Promise<void> {
 
 async function runMigration() {
   console.log('🔧 Running APPLY_ALL_FIXES migration via Supabase API...\n')
-  console.log(`📡 Connecting to: ${supabaseUrl.replace(/\/\/.*@/, '//***@')}\n`)
+  console.log(`📡 Connecting to: ${supabaseUrl!.replace(/\/\/.*@/, '//***@')}\n`)
 
   try {
     const migrationPath = join(process.cwd(), 'supabase', 'migrations', 'APPLY_ALL_FIXES.sql')

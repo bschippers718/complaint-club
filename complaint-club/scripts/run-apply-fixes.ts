@@ -58,7 +58,7 @@ async function runSQL(sql: string): Promise<void> {
 
 async function runMigration() {
   console.log('🔧 Running APPLY_ALL_FIXES migration...\n')
-  console.log(`📡 Connecting to: ${supabaseUrl.replace(/\/\/.*@/, '//***@')}\n`)
+  console.log(`📡 Connecting to: ${supabaseUrl!.replace(/\/\/.*@/, '//***@')}\n`)
 
   try {
     const migrationPath = join(process.cwd(), 'supabase', 'migrations', 'APPLY_ALL_FIXES.sql')

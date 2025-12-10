@@ -95,7 +95,7 @@ async function runMigration(filename: string): Promise<void> {
 
 async function main() {
   console.log('🗄️  Setting up Complaint Club database...\n')
-  console.log(`📡 Connecting to: ${supabaseUrl.replace(/\/\/.*@/, '//***@')}`)
+  console.log(`📡 Connecting to: ${supabaseUrl!.replace(/\/\/.*@/, '//***@')}`)
   
   // Check connection
   try {
