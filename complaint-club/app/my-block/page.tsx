@@ -5,8 +5,10 @@ import { Navbar } from '@/components/navbar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { CATEGORY_CONFIG, type Category } from '@/lib/categories'
+import { CATEGORY_CONFIG, CATEGORIES, type Category } from '@/lib/categories'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
+import { ReportButtons } from '@/components/report-buttons'
 
 interface NearbyComplaint {
   id: string
@@ -29,12 +31,53 @@ interface NearbyData {
   location: { lat: number; lon: number }
 }
 
+interface CategoryLeader {
+  category: Category
+  neighborhood_name: string
+  neighborhood_id: number
+  count: number
+}
+
 export default function MyBlockPage() {
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null)
   const [locationError, setLocationError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [data, setData] = useState<NearbyData | null>(null)
   const [radius, setRadius] = useState(200)
+  const [categoryLeaders, setCategoryLeaders] = useState<CategoryLeader[]>([])
+  const [leadersLoading, setLeadersLoading] = useState(true)
+
+  // Fetch category leaders for pre-location display
+  useEffect(() => {
+    async function fetchCategoryLeaders() {
+      try {
+        const categoriesToFetch: Category[] = ['noise', 'rats', 'trash', 'parking', 'heat_water']
+        const leaders: CategoryLeader[] = []
+        
+        // Fetch top neighborhood for each category
+        for (const category of categoriesToFetch) {
+          const res = await fetch(`/api/leaderboard?category=${category}&timeframe=month&limit=1`)
+          const json = await res.json()
+          if (json.data && json.data[0]) {
+            leaders.push({
+              category,
+              neighborhood_name: json.data[0].neighborhood_name,
+              neighborhood_id: json.data[0].neighborhood_id,
+              count: json.data[0].category_counts[category] || json.data[0].total
+            })
+          }
+        }
+        
+        setCategoryLeaders(leaders)
+      } catch (error) {
+        console.error('Failed to fetch category leaders:', error)
+      } finally {
+        setLeadersLoading(false)
+      }
+    }
+    
+    fetchCategoryLeaders()
+  }, [])
 
   const requestLocation = () => {
     setIsLoading(true)
@@ -128,23 +171,83 @@ export default function MyBlockPage() {
 
       <section className="container mx-auto px-4 py-8">
         {!location && !isLoading && (
-          <div className="max-w-md mx-auto text-center py-16">
-            <div className="text-6xl mb-6">📍</div>
-            <h2 className="text-2xl font-bold mb-4">Share Your Location</h2>
-            <p className="text-muted-foreground mb-8">
-              We need your location to show complaints near you. 
-              Your location is never stored or shared.
-            </p>
-            
-            {locationError && (
-              <div className="bg-destructive/10 text-destructive rounded-lg p-4 mb-6">
-                {locationError}
-              </div>
-            )}
+          <div className="max-w-4xl mx-auto">
+            {/* Call to action */}
+            <Card className="mb-8 border-primary/50 bg-gradient-to-br from-primary/10 to-transparent">
+              <CardContent className="pt-6">
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                  <div className="text-6xl">📍</div>
+                  <div className="flex-1 text-center md:text-left">
+                    <h2 className="text-2xl font-bold mb-2">Report Issues on Your Block</h2>
+                    <p className="text-muted-foreground mb-4">
+                      Enable location to see complaints near you and quickly report issues. 
+                      Your location is never stored or shared.
+                    </p>
+                    {locationError && (
+                      <div className="bg-destructive/10 text-destructive rounded-lg p-3 mb-4 text-sm">
+                        {locationError}
+                      </div>
+                    )}
+                    <Button onClick={requestLocation} size="lg">
+                      Enable Location to Report
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-            <Button onClick={requestLocation} size="lg">
-              Enable Location
-            </Button>
+            {/* Category Leaders Preview */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-muted-foreground">
+                Top Neighborhoods by Category This Month
+              </h3>
+              {leadersLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Card key={i} className="animate-pulse">
+                      <CardContent className="pt-4 pb-4">
+                        <div className="h-16 bg-muted rounded"></div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {categoryLeaders.map((leader) => {
+                    const config = CATEGORY_CONFIG[leader.category]
+                    return (
+                      <Link key={leader.category} href={`/n/${leader.neighborhood_id}`}>
+                        <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
+                          <CardContent className="pt-4 pb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="text-3xl">{config.icon}</div>
+                              <div className="flex-1 min-w-0">
+                                <div className={cn("font-semibold text-sm", config.color)}>
+                                  {config.label} Leader
+                                </div>
+                                <div className="font-bold truncate">
+                                  {leader.neighborhood_name}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {leader.count.toLocaleString()} complaints
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Explore link */}
+            <div className="text-center">
+              <Link href="/" className="text-primary hover:underline">
+                View Full Leaderboard →
+              </Link>
+            </div>
           </div>
         )}
 
@@ -192,6 +295,19 @@ export default function MyBlockPage() {
                     )
                   })}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Report Buttons */}
+            <Card className="mb-8">
+              <CardContent className="pt-6">
+                <ReportButtons 
+                  location={location} 
+                  onReport={(category) => {
+                    // Could refresh data here if needed
+                    console.log(`Reported ${category}`)
+                  }}
+                />
               </CardContent>
             </Card>
 
