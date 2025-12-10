@@ -103,7 +103,7 @@ export default function Home() {
               Data from <a href="https://data.cityofnewyork.us" className="text-primary hover:underline" target="_blank" rel="noopener">NYC Open Data</a> 311 Service Requests
             </div>
             <div>
-              Built with ❤️ by <a href="https://twitter.com/bschippers" className="text-primary hover:underline" target="_blank" rel="noopener">Ben Schippers</a>
+              Built with ❤️ by <a href="https://twitter.com/bschippers" className="text-primary hover:underline" target="_blank" rel="noopener">Ben Schippers</a> for NYC 🗽🏙️
             </div>
           </div>
         </div>
