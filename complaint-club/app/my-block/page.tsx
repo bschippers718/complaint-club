@@ -34,7 +34,7 @@ export default function MyBlockPage() {
   const [locationError, setLocationError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [data, setData] = useState<NearbyData | null>(null)
-  const [radius, setRadius] = useState(500)
+  const [radius, setRadius] = useState(200)
 
   const requestLocation = () => {
     setIsLoading(true)
@@ -198,7 +198,7 @@ export default function MyBlockPage() {
             {/* Radius selector */}
             <div className="flex items-center gap-4 mb-6">
               <span className="text-sm text-muted-foreground">Radius:</span>
-              {[250, 500, 1000].map((r) => (
+              {[100, 200, 500].map((r) => (
                 <Button
                   key={r}
                   variant={radius === r ? 'default' : 'outline'}
