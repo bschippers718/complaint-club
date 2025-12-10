@@ -303,8 +303,8 @@ function ComparisonView({ data }: { data: CompareData }) {
           <h3 className="text-lg font-bold mb-4">Category Breakdown</h3>
           <div className="space-y-4">
             {(Object.keys(category_winners) as Category[]).map((category) => {
-              const leftCount = left.category_counts[category]
-              const rightCount = right.category_counts[category]
+              const leftCount = left.category_counts?.[category] ?? 0
+              const rightCount = right.category_counts?.[category] ?? 0
               const catWinner = category_winners[category]
               const config = CATEGORY_CONFIG[category]
               const total = leftCount + rightCount
@@ -375,4 +375,5 @@ export default function ComparePage() {
     </Suspense>
   )
 }
+
 
