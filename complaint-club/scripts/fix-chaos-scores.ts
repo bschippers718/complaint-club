@@ -106,7 +106,7 @@ async function fixChaosScores(): Promise<void> {
 
 async function main() {
   console.log('🗄️  Fixing Chaos Scores in Supabase\n')
-  console.log(`📡 Connecting to: ${supabaseUrl.replace(/\/\/.*@/, '//***@')}\n`)
+  console.log(`📡 Connecting to: ${supabaseUrl!.replace(/\/\/.*@/, '//***@')}\n`)
   
   await fixChaosScores()
 }
