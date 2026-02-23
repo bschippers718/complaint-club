@@ -19,9 +19,10 @@ interface LeaderboardEntry {
 
 export default function Home() {
   const [category, setCategory] = useState<Category | 'all'>('all')
-  const [timeframe, setTimeframe] = useState<Timeframe>('month')
+  const [timeframe, setTimeframe] = useState<Timeframe>('all')
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [fallbackApplied, setFallbackApplied] = useState(false)
 
   useEffect(() => {
     async function fetchLeaderboard() {
@@ -35,9 +36,11 @@ export default function Home() {
         const res = await fetch(`/api/leaderboard?${params}`)
         const json = await res.json()
         setEntries(json.data || [])
+        setFallbackApplied(json.meta?.fallback_applied ?? false)
       } catch (error) {
         console.error('Failed to fetch leaderboard:', error)
         setEntries([])
+        setFallbackApplied(false)
       } finally {
         setIsLoading(false)
       }
@@ -91,7 +94,13 @@ export default function Home() {
       {/* Leaderboard */}
       <section className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <LeaderboardList entries={entries} isLoading={isLoading} />
+          <LeaderboardList
+            entries={entries}
+            isLoading={isLoading}
+            timeframe={timeframe}
+            fallbackApplied={fallbackApplied}
+            onTimeframeChange={() => setTimeframe('all')}
+          />
         </div>
       </section>
 

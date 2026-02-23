@@ -381,7 +381,9 @@ function ComplaintItem({ complaint }: { complaint: NearbyComplaint }) {
         <div className="flex items-center gap-2 mb-1">
           <span className={cn('font-medium', config.color)}>{config.label}</span>
           <span className="text-muted-foreground">•</span>
-          <span className="text-sm text-muted-foreground">{complaint.distance_meters < 100 ? '<1 block' : `${Math.round(complaint.distance_meters / 100)} ${complaint.distance_meters < 150 ? 'block' : 'blocks'}`} away</span>
+          <span className="text-sm text-muted-foreground" title="Distance from you">
+            {(complaint.distance_meters / 1609).toFixed(2)} mi away
+          </span>
           {hasDetails && (
             <span className="text-xs text-muted-foreground ml-auto">
               {expanded ? '▼' : '▶'}

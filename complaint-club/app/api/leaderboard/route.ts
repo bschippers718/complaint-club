@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   
   const category = (searchParams.get('category') || 'all') as Category | 'all'
-  const timeframe = (searchParams.get('timeframe') || 'month') as Timeframe
+  const timeframe = (searchParams.get('timeframe') || 'all') as Timeframe
   const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
 
   // Require Supabase configuration
@@ -23,11 +23,25 @@ export async function GET(request: NextRequest) {
     const { createServiceClient } = await import('@/lib/supabase')
     const supabase = createServiceClient()
 
-    const { data, error } = await supabase.rpc('get_leaderboard', {
+    let actualTimeframe = timeframe
+    let { data, error } = await supabase.rpc('get_leaderboard', {
       p_timeframe: timeframe,
       p_category: category,
       p_limit: limit
     })
+
+    // Fall back to 90 days when shorter timeframes have no data
+    if (!error && (!data || data.length === 0) && timeframe !== 'all') {
+      const fallback = await supabase.rpc('get_leaderboard', {
+        p_timeframe: 'all',
+        p_category: category,
+        p_limit: limit
+      })
+      if (!fallback.error && fallback.data?.length) {
+        data = fallback.data
+        actualTimeframe = 'all'
+      }
+    }
 
     if (error) {
       throw error
@@ -74,6 +88,8 @@ export async function GET(request: NextRequest) {
       meta: {
         category,
         timeframe,
+        actual_timeframe: actualTimeframe,
+        fallback_applied: actualTimeframe !== timeframe,
         count: leaderboard.length,
         updated_at: new Date().toISOString()
       }

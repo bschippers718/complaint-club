@@ -16,9 +16,12 @@ interface LeaderboardEntry {
 interface LeaderboardListProps {
   entries: LeaderboardEntry[]
   isLoading?: boolean
+  timeframe?: string
+  fallbackApplied?: boolean
+  onTimeframeChange?: () => void
 }
 
-export function LeaderboardList({ entries, isLoading }: LeaderboardListProps) {
+export function LeaderboardList({ entries, isLoading, timeframe, fallbackApplied, onTimeframeChange }: LeaderboardListProps) {
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -48,16 +51,31 @@ export function LeaderboardList({ entries, isLoading }: LeaderboardListProps) {
     return (
       <div className="text-center py-16">
         <div className="text-6xl mb-4">🏙️</div>
-        <h3 className="text-xl font-semibold mb-2">No data yet</h3>
-        <p className="text-muted-foreground">
-          The leaderboard will populate once complaint data is ingested.
+        <h3 className="text-xl font-semibold mb-2">No data for this period</h3>
+        <p className="text-muted-foreground mb-4">
+          {timeframe && timeframe !== 'all'
+            ? 'Try selecting "90 Days" for full historical data.'
+            : 'The leaderboard will populate once complaint data is ingested.'}
         </p>
+        {timeframe && timeframe !== 'all' && onTimeframeChange && (
+          <button
+            onClick={onTimeframeChange}
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            Switch to 90 Days →
+          </button>
+        )}
       </div>
     )
   }
 
   return (
     <div className="space-y-3">
+      {fallbackApplied && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
+          This period has no data yet. Showing 90-day rankings instead.
+        </div>
+      )}
       {entries.map((entry, index) => (
         <NeighborhoodCard
           key={entry.neighborhood_id}
