@@ -37,9 +37,9 @@ interface NYC311Record {
 export const maxDuration = 300 // Allow up to 5 minutes for Vercel Pro
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret
+  // Verify cron secret (trim to avoid Vercel env whitespace/newline issues)
   const authHeader = request.headers.get('authorization')
-  const cronSecret = process.env.CRON_SECRET
+  const cronSecret = process.env.CRON_SECRET?.trim()
 
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
   }
 
   const authHeader = request.headers.get('authorization')
-  const cronSecret = process.env.CRON_SECRET
+  const cronSecret = process.env.CRON_SECRET?.trim()
 
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
