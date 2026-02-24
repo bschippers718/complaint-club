@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { mapComplaintTypeToCategory } from '@/lib/categories'
 
 export const revalidate = 30 // Cache for 30 seconds
+
+const NYC_311_API = 'https://data.cityofnewyork.us/resource/erm2-nwe9.json'
+
+type NearbyComplaint = { id: string; category: string; complaint_type: string; descriptor: string; created_at: string; distance_meters: number; neighborhood_name: string }
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -35,30 +40,37 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { createServiceClient } = await import('@/lib/supabase')
-    const supabase = createServiceClient()
+    let complaints: NearbyComplaint[] = []
 
-    const { data: complaints, error } = await supabase.rpc('get_nearby_complaints', {
-      p_latitude: lat,
-      p_longitude: lon,
-      p_radius_meters: radius,
-      p_limit: limit
-    })
+    try {
+      const { createServiceClient } = await import('@/lib/supabase')
+      const supabase = createServiceClient()
 
-    if (error) {
-      throw error
+      const { data: rpcData, error } = await supabase.rpc('get_nearby_complaints', {
+        p_latitude: lat,
+        p_longitude: lon,
+        p_radius_meters: radius,
+        p_limit: limit
+      })
+
+      if (error) throw error
+      complaints = rpcData || []
+    } catch (rpcError) {
+      // RPC timed out or failed - fall back to NYC Open Data
+      console.warn('Nearby RPC failed, using NYC Open Data fallback:', rpcError)
+      complaints = await fetchFromNYCOpenData(lat, lon, radius, limit)
     }
 
-    const annoyanceScore = calculateAnnoyanceScore(complaints || [])
+    const annoyanceScore = calculateAnnoyanceScore(complaints)
 
     const categoryCounts: Record<string, number> = {}
-    for (const c of complaints || []) {
+    for (const c of complaints) {
       categoryCounts[c.category] = (categoryCounts[c.category] || 0) + 1
     }
 
     return NextResponse.json({
       data: {
-        complaints: (complaints || []).map((c: {
+        complaints: complaints.map((c: {
           id: string
           category: string
           complaint_type: string
@@ -76,7 +88,7 @@ export async function GET(request: NextRequest) {
           neighborhood: c.neighborhood_name
         })),
         summary: {
-          total: (complaints || []).length,
+          total: complaints.length,
           radius_meters: radius,
           annoyance_score: annoyanceScore,
           category_breakdown: categoryCounts
@@ -92,6 +104,61 @@ export async function GET(request: NextRequest) {
       error: error instanceof Error ? error.message : 'Failed to fetch nearby complaints'
     }, { status: 500 })
   }
+}
+
+async function fetchFromNYCOpenData(lat: number, lon: number, radius: number, limit: number): Promise<NearbyComplaint[]> {
+  // Convert radius (meters) to degrees for bbox. At NYC: 1° lat ≈ 111km, 1° lon ≈ 85km
+  const degLat = radius / 111000
+  const degLon = radius / 85000
+  const minLat = lat - degLat
+  const maxLat = lat + degLat
+  const minLon = lon - degLon
+  const maxLon = lon + degLon
+
+  const whereClause = `latitude >= ${minLat} AND latitude <= ${maxLat} AND longitude >= ${minLon} AND longitude <= ${maxLon}`
+  const url = new URL(NYC_311_API)
+  url.searchParams.set('$select', 'unique_key,complaint_type,descriptor,created_date,latitude,longitude,borough')
+  url.searchParams.set('$where', whereClause)
+  url.searchParams.set('$order', 'created_date DESC')
+  url.searchParams.set('$limit', '500')
+
+  const res = await fetch(url.toString())
+  if (!res.ok) throw new Error(`NYC API: ${res.status}`)
+
+  const records: Array<{ unique_key: string; complaint_type: string; descriptor?: string; created_date: string; latitude?: string; longitude?: string; borough?: string }> = await res.json()
+
+  const withDistance = records
+    .filter((r) => r.latitude && r.longitude)
+    .map((r) => {
+      const rLat = parseFloat(r.latitude!)
+      const rLon = parseFloat(r.longitude!)
+      const distance_meters = haversineMeters(lat, lon, rLat, rLon)
+      return { ...r, rLat, rLon, distance_meters }
+    })
+    .filter((r) => r.distance_meters <= radius)
+    .sort((a, b) => a.distance_meters - b.distance_meters)
+    .slice(0, limit)
+
+  return withDistance.map((r) => ({
+    id: r.unique_key,
+    category: mapComplaintTypeToCategory(r.complaint_type),
+    complaint_type: r.complaint_type,
+    descriptor: r.descriptor || '',
+    created_at: r.created_date,
+    distance_meters: r.distance_meters,
+    neighborhood_name: r.borough || ''
+  }))
+}
+
+function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000 // Earth radius in meters
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
 }
 
 function calculateAnnoyanceScore(complaints: { category: string; distance_meters: number; created_at: string }[]): number {
